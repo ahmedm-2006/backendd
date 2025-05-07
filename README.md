@@ -1,5 +1,6 @@
 #include<bits/stdc++.h>
 #include<conio.h>
+
 using namespace std;
 const int num_of_patients = 100;
 const int num_of_doctors = 10;
@@ -9,6 +10,7 @@ int currentuserindex = -1;
 int currentdoctorindex = -1;
 int thisdoctorindex = 0;
 string currentusertype = "";
+int tempo;
 
 struct account {
     string username;
@@ -31,8 +33,8 @@ struct doctor {
 user users[num_of_patients];
 doctor doctors[num_of_doctors];
 
-bool signupusers(user users[], int size);
-bool signupdoctors(doctor doctors[], int size);
+bool signupusers(user users[]);
+bool signupdoctors(doctor doctors[]);
 bool findusernamedoctor(string username, doctor users[]);
 bool findusernameuser(string username, user users[]);
 bool finduserid(int id, user users[]);
@@ -42,7 +44,7 @@ bool findloginuser(string username, string password, user users[]);
 bool findlogindoctor(string username, string password, doctor doctors[]);
 bool login();
 void viewdoctors();
-void addtime(doctor doctors[], int time);
+void addtime(doctor doctors[]);
 void removetime(doctor doctors[]);
 void edittime(doctor doctors[]);
 void viewtime(doctor doctors[]);
@@ -60,7 +62,7 @@ void writeusers(user users[], int size);
 void readusers(user users[], int& size);
 void writedoctor(doctor doctors[], int size);
 void readdoctor(doctor doctors[], int& size);
-void welcome();
+bool welcome();
 void doctorf();
 void patientf();
 
@@ -70,14 +72,15 @@ int main() {
     cout << "\t\t\t ================================ \n\n";
     int userCount = 0, doctorCount = 0;
     char choice1, choice2;
-    // Load previous data
     readusers(users, userCount);
     readdoctor(doctors, doctorCount);
     thisuserindex = userCount;
     thisdoctorindex = doctorCount;
     do {
-        welcome();
-    } while (!login());
+        if (welcome()) {
+            break;
+        }
+    } while (true);
     if (currentusertype == "doctor") {
         do {
             doctorf();
@@ -102,13 +105,12 @@ int main() {
         cout << "No valid user is currently logged in.\n";
     }
 
-    // Save data back to files
     writeusers(users, thisuserindex);
     writedoctor(doctors, thisdoctorindex);
     return 0;
 }
 
-bool signupusers(user users[], int size) /*checked*/ {
+bool signupusers(user users[]) {
     int i = thisuserindex;
     cout << "Enter your Username: \n";
     cin >> users[i].useraccount.username;
@@ -128,7 +130,7 @@ bool signupusers(user users[], int size) /*checked*/ {
     return true;
 }
 
-bool signupdoctors(doctor doctors[], int size)/*checked*/ {
+bool signupdoctors(doctor doctors[]) {
     int i = thisdoctorindex;
     cout << "Enter your Username: \n";
     cin >> doctors[i].doctoraccount.useraccount.username;
@@ -189,7 +191,7 @@ bool findlogindoctor(string username, string password, doctor doctors[]) {
 }
 
 
-string passwordinput()/*checked*/ {
+string passwordinput() {
     string input = "";
     char ch;
     while (true) {
@@ -256,7 +258,7 @@ void viewdoctors() {
     }
 }
 
-void addtime(doctor doctors[], int time)/*checked*/ {
+void addtime(doctor doctors[]) {
     for (int i = 0; i < times; i++) {
         cout << i+1 << ". ";
         cin >> doctors[currentdoctorindex].available_time[i];
@@ -264,25 +266,27 @@ void addtime(doctor doctors[], int time)/*checked*/ {
     }
 }
 
-void removetime(doctor doctors[])/*checked*/ {
+void removetime(doctor doctors[]) { /***************/
     int i;//index of time
-    cout << "remove" <<endl;
+    viewtime(doctors);
+    cout << "Choose time slot to remove" <<endl;
     cin >> i;
     i -= 1;
     for (int j = i; j < times - 1; ++j) {
         doctors[currentdoctorindex].available_time[j] = doctors[currentdoctorindex].available_time[j + 1];
     }
-    times--;
+ times--;
     viewtime(doctors);
 }
 
-void edittime(doctor doctors[])/*checked*/ {
-    string temp;//time wanted to be put
-    int i;//index of time to be edited
-    cout << "enter i";
+void edittime(doctor doctors[]){
+    string temp;
+    int i;
+    viewtime(doctors);
+    cout << "Enter index of time to be edited:\n";
     cin >> i;
     i -= 1;
-    cout << "temp";
+    cout << "Enter time wanted:\n";
     cin >> temp;
     doctors[currentdoctorindex].available_time[i] = temp;
     viewtime(doctors);
@@ -295,12 +299,17 @@ void viewtime(doctor doctors[]) {
     }
 }
 
-void book(doctor doctors[]) {
+void book(doctor doctors[]) {/*********/
     int doctor_index, slot_index;
-     cout << "Enter Doctor Index (1 to " << thisdoctorindex << "): ";
+    viewdoctors();
+     cout << "Enter Doctor Index : ";
     cin >> doctor_index;
     doctor_index -= 1;
-    cout << "Enter Time Slot (1 to " << times << "): ";
+    for (int i = 0;i < times;i++) {
+        cout << i + 1 << ". " << doctors[doctor_index].available_time[i];
+        cout << endl;
+    }
+    cout << "Enter Time Slot : ";
     cin >> slot_index;
     slot_index -= 1;
     if (doctors[doctor_index].appointment[slot_index]) {
@@ -364,6 +373,7 @@ void viewpatientswithappointments() {
 }
 
 void displayAvailableDoctorsAtTime(string time) {
+    cout << "Enter the time you want to search at:\n";
     cin >> time;
     bool found = false;
     cout << "Doctors available at " << time << ":\n";
@@ -385,10 +395,6 @@ void displayAvailableDoctorsAtTime(string time) {
 
 void edituserusername(user users[]) {
     int index = currentuserindex;
-    if (index < 0) {
-        cout << "No user is currently logged in.\n";
-        return;
-    }
     string newusername;
     cout << "Enter new username: ";
     cin >> newusername;
@@ -410,10 +416,6 @@ void edituserpassword(user users[]) {
 
 void editdoctorusername(doctor doctors[]) {
     int index = currentdoctorindex;
-    if (index < 0) {
-        cout << "No doctor is currently logged in.\n";
-        return;
-    }
     string newusername;
     cout << "Enter new username: ";
     cin >> newusername;
@@ -470,7 +472,7 @@ void readusers(user users[], int& size) {
 void writedoctor(doctor doctors[], int size) {
     fstream out("doctordata.txt", ios::out);
     if (!out) {
-        //cout << "File not Found";
+        cout << "File not Found";
         return;
     }
     for (int i = 0; i < size; i++) {
@@ -511,7 +513,7 @@ void readdoctor(doctor doctors[], int& size) {
     in.close();
 }
 
-void welcome() {
+bool welcome() {
     int choice;
     cout << "Choose: \n";
     cout << "1. To Signup as a doctor.\n";
@@ -520,16 +522,19 @@ void welcome() {
     cout << "Enter your choice: ";
     cin >> choice;
     if (choice == 1) {
-        signupdoctors(doctors, num_of_doctors);
+        signupdoctors(doctors);
+        return false;
     }
     else if (choice == 2) {
-        signupusers(users, num_of_patients);
+        signupusers(users);
+        return false;
     }
     else if (choice == 3) {
-        login();
+       return login();
     }
     else {
         cout << "Invalid Choice \n";
+        return false;
     }
 }
 
@@ -544,7 +549,7 @@ void doctorf() {
     cout << "Enter your choice: ";
     cin >> choice;
     if (choice == 1) {
-        addtime(doctors, times);
+        addtime(doctors);
     }
     else if (choice == 2) {
         removetime(doctors);
@@ -613,10 +618,10 @@ void patientf() {
         cout << "2. Edit your password\n";
         cout << "Enter your choice: ";
         cin >> choice2;
-        if (choice == 1) {
+        if (choice2 == 1) {
             edituserusername(users);
         }
-        else if (choice == 2) {
+        else if (choice2 == 2) {
             edituserpassword(users);
         }
         else {
